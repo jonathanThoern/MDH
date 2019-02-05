@@ -16,7 +16,7 @@ while(1): # Loop
     gray_vid = cv2.cvtColor(frame, cv2.IMREAD_GRAYSCALE) # Change from colour to grayscale
         
     cv2.imshow('Original',frame) # Show the original frame input
-    edged_frame = cv2.Canny(frame,TL,TH) # Apply canny filter
+    edged_frame = cv2.Canny(frame,100,200) # Apply canny filter
     cv2.imshow('Edges',edged_frame) # Show Canny image
     lower_yellow = np.array([20, 100, 100], dtype = 'uint8')
     upper_yellow = np.array([30, 255, 255], dtype='uint8')
