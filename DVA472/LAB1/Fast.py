@@ -9,11 +9,11 @@ while True:
     ret, frame = cap.read()
 
     # Initiate FAST object 
-    fast = cv2.FastFeatureDetector_create(threshold = 40, nonmaxSuppression = True, type = cv2.FAST_FEATURE_DETECTOR_TYPE_9_16)
+    fast = cv2.FastFeatureDetector_create(threshold = 40, nonmaxSuppression = True, type = cv2.FAST_FEATURE_DETECTOR_)
 
     # find and draw the keypoints
     kp = fast.detect(frame,None)
-    img2 = cv2.drawKeypoints(frame, kp, None, color=(255,0,0)) #flags = cv2.FAST_FEATURE_DETECTOR_TYPE_9_16)
+    img2 = cv2.drawKeypoints(frame, kp, None, color=(255,0,0)) 
 
     cv2.imshow('fast_true',img2)
 
@@ -24,4 +24,3 @@ while True:
 cap.release()
 cv2.destroyAllWindows()
 
-cv2.addWeighted()
