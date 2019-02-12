@@ -2,7 +2,7 @@ import cv2
 import numpy as np
  
 
-cap = cv2.VideoCapture('/home/odroid/Desktop/Sobel/Video_1.mp4')#Input video
+cap = cv2.VideoCapture('Video_1.mp4')#Input video
 while(1):#Loop over frames
 	ret, frame = cap.read()#Read frame
 	gray_vid = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)#Coverts frame to grayscale
