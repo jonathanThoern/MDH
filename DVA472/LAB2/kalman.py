@@ -99,9 +99,9 @@ Xhat[:,[1]] = xhat
 PP[:,1] = np.reshape(P, (1,4)) # MAY BE WRONG!!! (4,1)
 
 #figure(1)
-fig = plt.figure()
+#fig = plt.figure()
 #drawnow
-fig.show()
+#fig.show()
 
 #for k = 1:n
 for k in range(1,n):
@@ -129,40 +129,31 @@ for k in range(1,n):
     #PP(:,k+1) = reshape(P,4,1)
     PP[:,[k+1]] = np.reshape(P,(4,1))
 
-    #clf, subplot(2,1,1), 
-    #plot(X(1,1:(k+1)),'r')
-    plt.clf()
+    """
     plt.subplot(2,1,1)
-    plt.plot(X[1,1:[k+1]],'r')
+    plt.plot(X[1,1:(k+1)], color = 'red')
+    plt.hold(True)
+    plt.plot(Xhat[1,1:(k+1)], color = 'blue')
+    plt.plot(X[1,1:(k+1)]-Xhat[1,1:(k+1)], color = 'green')
+
+
+    plt.title('Position (red: true, blue: est, green: error)')
+    """
+    
+    plt.subplot(2,1,2)
+    plt.plot(X[2,1:(k+1)], color = 'red')
+    
+    #plt.hold(True)
+    
+    plt.plot(Xhat[2,1:(k+1)],color = 'blue')
+   
+    plt.plot(X[2,1:(k+1)]-Xhat[2,1:(k+1)],color = 'green')
+
+    plt.title('Speed (red: true, blue: est, green: error)')
     
 
-    #hold on, 
-    plt.hold(True)
+plt.show()
 
-    #plot(Xhat(1,1:(k+1)),'b')
-    plt.plot(Xhat[1,1:[k+1]], 'b')
-    #plot(X(1,1:(k+1))-Xhat(1,1:(k+1)),'g')
-    plt.plot(X[1,1:[k+1]]-Xhat[1,1:[k+1]],'g')
-#     axis([0 n+5 -2 7])
-    plt.subtitle('Position (red: true, blue: est, green: error)')
-    #legend('true','est','error')
-
-    #subplot(2,1,2), 
-    #plot(X(2,1:(k+1)),'r')
-    fig.subplot(2,1,2)
-    fig.plot(X[2,1:[k+1]],'r')
-    #hold on,
-    fig.hold(True)
-    #plot(Xhat(2,1:(k+1)),'b')
-    fig.plot(Xhat[2,1:[k+1]],'b')
-    #plot(X(2,1:(k+1))-Xhat(2,1:(k+1)),'g')
-    fig.plot(X[2,1:[k+1]]-Xhat[2,1:[k+1]],'g')
-#     axis([0 n+5 -5 5])
-    fig.subtitle('Speed (red: true, blue: est, green: error)')
-    #legend('true','est','error')
-
-    fig.show()
-end
 
 """
 E = X - Xhat
