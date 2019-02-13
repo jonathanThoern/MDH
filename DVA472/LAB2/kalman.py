@@ -62,107 +62,67 @@ vStd = 0.1      # Simulated measurement noise on position
 
 ##########################
 # The Kalman Filter modeled uncertainties and initial values
-
-#xhat = [-2, 0]'
 xhat = np.matrix([-2, 0])
 xhat = xhat.getH()
 
-#P = eye(2)*1
 P = np.identity(2)*1
-
-#G = eye(2)
 G = np.matrix([[1,0],[0,1]])
-
 D = 1
-#R = 100*diag([0.01^2, 0.1^2])
 R = 100 * np.diag([0.01**2, 0.1**2])
-
 Q = 100*0.1**2
 
+# Iterations in simulation. Change for to while true
 n = 300
 
-# X = zeros(2,n+1)
 X = np.zeros((2,n+1))
-#Xhat = zeros(2,n+1)
 Xhat = np.zeros((2,n+1))
-#PP = zeros(4,n+1)
 PP = np.zeros((4,n+1))
-#KK = zeros(2,n)
 KK = np.zeros((2,n))
-
-#X(:,1) = x
 X[:,[0]] = x
-
-#Xhat(:,1) = xhat
 Xhat[:,[0]] = xhat
-
-#PP(:,1) = reshape(P,4,1)
 
 PP[:,0] = np.reshape(P, (1,4)) # MAY BE WRONG!!! (4,1)
 
-#figure(1)
-#fig = plt.figure()
-#drawnow
-#fig.show()
-
-#for k = 1:n
 for k in range(0,n):
-    #x = A * x + B * u + [wStdP*randn(1,1), wStdV*randn(1,1)]
+    
     temp1 = np.matrix([wStdP*np.random.randn(1), wStdV*np.random.randn(1)])
-    
-    x = (A * x) + (B * u) + temp1 # + np.matrix([[wStdP*np.random.randn(1,1)], [wStdV*np.random.randn(1,1)]])
-    
-    #y = C * x + D * vStd*randn(1,1)
+    x = (A * x) + (B * u) + temp1 
     y = C * x + D * vStd*np.random.randn(1,1)
-    
-    #X(:,k+1) = x
+ 
     X[:,[k+1]] = x
-
     xhat = A * xhat + B * u
-    #P = A * P * A' + G * R * G'
     Acon = A.getH()  
     Gcon = G.getH() #G is identity, T is the same
     P = A * P * Acon + G * R * Gcon
     
 ############ complete line 83
-    #K = P * C' * inv(C * P * C' + D * Q * D')
     Ccon = C.getH()
-    # Dcon = D.getH() Is scalar...
+    # Dcon = D.getH() # Is scalar, cannot be transposed
     K = P * Ccon * linalg.inv(C * P * Ccon + D * Q * D)
-    
 #############
     xhat = xhat + K * (y - C * xhat)
     P = P - K * C * P
     
-    #Xhat(:,k+1) = xhat
     Xhat[:,[k+1]] = xhat
-    #KK(:,k) = K
     KK[:,[k]] = K
-    
-    #PP(:,k+1) = reshape(P,4,1)
     PP[:,[k+1]] = np.reshape(P,(4,1))
     
-
-    plt.subplot(2,1,1)
+    # Plot position and speed
+    plt.subplot(2,1,1) # Upper subplot
     plt.plot(X[0,1:(k+1)], color = 'red')
     plt.hold(True)
     plt.plot(Xhat[0,1:(k+1)], color = 'blue')
     plt.plot(X[0,1:(k+1)]-Xhat[0,1:(k+1)], color = 'green')
     plt.title('Position (red: true, blue: est, green: error)')
     
-    plt.subplot(2,1,2)
+    plt.subplot(2,1,2) # Lower subplot
     plt.plot(X[1,1:(k+1)], color = 'red')
-    
     plt.hold(True)
-    
     plt.plot(Xhat[1,1:(k+1)],color = 'blue')
-   
     plt.plot(X[1,1:(k+1)]-Xhat[1,1:(k+1)],color = 'green')
-
     plt.title('Speed (red: true, blue: est, green: error)')
     
-
-plt.show()
+plt.show() # Show plot after calculations are done
 
 
 """
