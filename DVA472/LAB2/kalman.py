@@ -40,7 +40,7 @@ import numpy.matlib as math
 from numpy import dot, sum, tile, linalg
 import random
 import math
-#from drawnow import drawnow
+
 
 ##########################
 # The system model
@@ -49,10 +49,7 @@ A = np.matrix([[1, dt], [0, 1]])
 B = np.matrix([[0], [dt]])
 C = np.matrix([1, 0])
 
-#x = [1, 0.5]'
 x = np.matrix([1, 0.5])
-
-#x = np.matrix.getH([1, 0.5])
 x = x.getH()
 
 u = 0
@@ -69,17 +66,20 @@ vStd = 0.1      # Simulated measurement noise on position
 #xhat = [-2, 0]'
 xhat = np.matrix([-2, 0])
 xhat = xhat.getH()
+
 #P = eye(2)*1
 P = np.identity(2)*1
 
 #G = eye(2)
-G = np.identity(2)
+G = np.matrix([[1,0],[0,1]])
+
 D = 1
 #R = 100*diag([0.01^2, 0.1^2])
 R = 100 * np.diag([0.01**2, 0.1**2])
+
 Q = 100*0.1**2
 
-n = 100
+n = 300
 
 # X = zeros(2,n+1)
 X = np.zeros((2,n+1))
@@ -91,12 +91,14 @@ PP = np.zeros((4,n+1))
 KK = np.zeros((2,n))
 
 #X(:,1) = x
-X[:,[1]] = x
+X[:,[0]] = x
+
 #Xhat(:,1) = xhat
-Xhat[:,[1]] = xhat
+Xhat[:,[0]] = xhat
+
 #PP(:,1) = reshape(P,4,1)
 
-PP[:,1] = np.reshape(P, (1,4)) # MAY BE WRONG!!! (4,1)
+PP[:,0] = np.reshape(P, (1,4)) # MAY BE WRONG!!! (4,1)
 
 #figure(1)
 #fig = plt.figure()
@@ -104,50 +106,58 @@ PP[:,1] = np.reshape(P, (1,4)) # MAY BE WRONG!!! (4,1)
 #fig.show()
 
 #for k = 1:n
-for k in range(1,n):
+for k in range(0,n):
     #x = A * x + B * u + [wStdP*randn(1,1), wStdV*randn(1,1)]
     temp1 = np.matrix([wStdP*np.random.randn(1), wStdV*np.random.randn(1)])
+    
     x = (A * x) + (B * u) + temp1 # + np.matrix([[wStdP*np.random.randn(1,1)], [wStdV*np.random.randn(1,1)]])
+    
     #y = C * x + D * vStd*randn(1,1)
     y = C * x + D * vStd*np.random.randn(1,1)
+    
     #X(:,k+1) = x
     X[:,[k+1]] = x
 
     xhat = A * xhat + B * u
     #P = A * P * A' + G * R * G'
-    P = A * P * np.conj(A).T + G * R * np.conj(G).T
+    Acon = A.getH()  
+    Gcon = G.getH() #G is identity, T is the same
+    P = A * P * Acon + G * R * Gcon
+    
 ############ complete line 83
     #K = P * C' * inv(C * P * C' + D * Q * D')
-    K = P * np.conj(C).T * linalg.inv(C * P * np.conj(C).T + D * Q * np.conj(D).T)
+    Ccon = C.getH()
+    # Dcon = D.getH() Is scalar...
+    K = P * Ccon * linalg.inv(C * P * Ccon + D * Q * D)
+    
 #############
     xhat = xhat + K * (y - C * xhat)
     P = P - K * C * P
+    
     #Xhat(:,k+1) = xhat
     Xhat[:,[k+1]] = xhat
     #KK(:,k) = K
     KK[:,[k]] = K
+    
     #PP(:,k+1) = reshape(P,4,1)
     PP[:,[k+1]] = np.reshape(P,(4,1))
+    
 
-    """
     plt.subplot(2,1,1)
-    plt.plot(X[1,1:(k+1)], color = 'red')
+    plt.plot(X[0,1:(k+1)], color = 'red')
     plt.hold(True)
-    plt.plot(Xhat[1,1:(k+1)], color = 'blue')
-    plt.plot(X[1,1:(k+1)]-Xhat[1,1:(k+1)], color = 'green')
-
-
+    plt.plot(Xhat[0,1:(k+1)], color = 'blue')
+    plt.plot(X[0,1:(k+1)]-Xhat[0,1:(k+1)], color = 'green')
     plt.title('Position (red: true, blue: est, green: error)')
-    """
     
     plt.subplot(2,1,2)
-    plt.plot(X[2,1:(k+1)], color = 'red')
+    plt.plot(X[1,1:(k+1)], color = 'red')
     
-    #plt.hold(True)
+    plt.hold(True)
     
-    plt.plot(Xhat[2,1:(k+1)],color = 'blue')
+    plt.plot(Xhat[1,1:(k+1)],color = 'blue')
    
-    plt.plot(X[2,1:(k+1)]-Xhat[2,1:(k+1)],color = 'green')
+    plt.plot(X[1,1:(k+1)]-Xhat[1,1:(k+1)],color = 'green')
 
     plt.title('Speed (red: true, blue: est, green: error)')
     
