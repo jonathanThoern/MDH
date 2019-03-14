@@ -2,14 +2,16 @@ from yolo import YOLO
 import numpy as np
 import cv2
 
+
+
 cam = cv2.VideoCapture('outpy3.avi')
 #cap = cv2.VideoCapture('C:\Dev\MDH\DVA472\Video_1.mp4')
 yolo = YOLO()
 
 class obstacle:
-    right_lines = [] # num of right lines, y_min, y_max, x_min, x_max
-    left_lines = [] # num of left lines, y_min, y_max, x_min, x_max
-    boxes = [] # num of boxes, y_min, y_max, x_min, x_max
+    right_lines = [] # num of right lines, y_min, y_max, x_min, x_max - add magnitude(i.e distance)???
+    left_lines = [] # num of left lines, y_min, y_max, x_min, x_max - add magnitude(i.e distance)???
+    boxes = [] # num of boxes, y_min, y_max, x_min, x_max, distance
 
     #def __init__(self):
         #self.right_lines = [] # num of right lines, y_min, y_max, x_min, x_max
@@ -33,13 +35,7 @@ class obstacle:
             #predicted_class = self.class_names[c]
             box = detected[i]
             score = scores[i]
-
-            print("Before rearranging: ", box)
             y_min, x_min, y_max, x_max = box  #top, left, bottom, right = box
-            print("y_min", y_min)
-            print("y_max", y_max)
-            print("x_min", x_min)
-            print("x_max", x_max) 
             y_min = max(0, np.floor(y_min + 0.5).astype('int32'))
             x_min = max(0, np.floor(x_min + 0.5).astype('int32'))
             y_max = min(416, np.floor(y_max + 0.5).astype('int32'))
@@ -64,6 +60,10 @@ class obstacle:
         self.right_lines = temp_right
         self.left_lines = temp_left
         self.boxes = temp_boxes
+
+    def getBoxDistance():
+        BOX_WIDTH = 20 # Expressed in cm
+        FOCAL_LENGHT = 0.4 # Expressed in cm
 
 
 def main():

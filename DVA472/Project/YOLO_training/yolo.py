@@ -125,8 +125,8 @@ class YOLO(object):
                 K.learning_phase(): 0
             })
         #print('Found {} boxes for {}'.format(len(out_boxes), 'img'))
+
         # Try new return here !
-       
         return out_boxes, out_scores, out_classes
         
         '''
