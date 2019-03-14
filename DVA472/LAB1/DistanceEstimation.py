@@ -19,8 +19,8 @@ if ret==True:
         roi_color = img[y:y + h, x:x + w]
         w=w*0.0264583333
         foclLenght=(w* KNOWN_DISTANCE) / KNOWN_WIDTH
-        print(w)
-        print(foclLenght)
+        print("perc width",w)
+        print("focal: ",foclLenght)
     cv2.imshow('img', img)
     cv2.waitKey(0)
 cv2.destroyAllWindows()
