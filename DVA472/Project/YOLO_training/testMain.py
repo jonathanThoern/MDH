@@ -101,6 +101,7 @@ class obstacle:
                         box_center = x_min + (boxW/2)
                     else:
                         box_center = x_max - (boxW/2)
+                        
                     box_offset = (box_center - 208) # UNCLEAR 208 + ?
                     box_pix_m = (box_dist * self.BOX_DIST_FACTOR)/416
                     box_xpos = round(box_pix_m * box_offset,2)
