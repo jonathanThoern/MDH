@@ -20,10 +20,10 @@ from keras.utils import multi_gpu_model
 
 class YOLO(object):
     _defaults = {
-        "model_path": 'model_data/yolo.h5',
-        "anchors_path": 'model_data/yolo_anchors.txt',
-        "classes_path": 'model_data/voc_classes.txt',
-        "score" : 0.3,
+        "model_path": 'model_data/tiny_weights_190315.h5',
+        "anchors_path": 'model_data/tiny_yolo_anchors.txt',
+        "classes_path": 'model_data/classes_190315.txt',
+        "score" : 0.2, #was 0.3,
         "iou" : 0.45,
         "model_image_size" : (416, 416),
         "gpu_num" : 1,
