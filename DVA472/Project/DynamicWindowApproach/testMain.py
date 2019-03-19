@@ -81,19 +81,19 @@ class obstacle:
                         box1_dist = self.DIST_MIN # Set fixed value when box partially out of frame
                         box2_dist = self.DIST_MIN
                     '''
-                    box1_offset = (box1_center - 208) # UNCLEAR 208 + ?
-                    box2_offset = (box2_center - 208)
-                    box1_pix_m = (box1_dist * self.BOX_DIST_FACTOR) / 416
-                    box2_pix_m = (box2_dist * self.BOX_DIST_FACTOR) / 416
-                    box1_xpos = round(box1_pix_m * box1_offset,2)
-                    box2_xpos = round(box2_pix_m * box2_offset,2)
+                    #box1_offset = (box1_center - 208) # UNCLEAR 208 + ?
+                    #box2_offset = (box2_center - 208)
+                    #box1_pix_m = (box1_dist * self.BOX_DIST_FACTOR) / 416
+                    #box2_pix_m = (box2_dist * self.BOX_DIST_FACTOR) / 416
+                    #box1_xpos = round(box1_pix_m * box1_offset,2)
+                    #box2_xpos = round(box2_pix_m * box2_offset,2)
 
-                    temp_boxes.extend((box1_dist, box1_xpos)) # y_dist, x_pos
-                    temp_boxes.extend((box2_dist, box2_xpos))
+                    temp_boxes.extend((box1_center, box1_dist)) 
+                    temp_boxes.extend((box2_center, box2_dist))
                 
                 elif(boxRatio > self.BOX_OUT_RATIO):
                     boxW = boxH / boxRatio
-                    box_dist = self.getBoxDistance(boxW)/100 # in meter
+                    box_dist = self.getBoxDistance(boxW) # in cm
 
                     ### Distance from IR and Kalman could be applied here ###
 
@@ -101,27 +101,28 @@ class obstacle:
                         box_center = x_min + (boxW/2)
                     else:
                         box_center = x_max - (boxW/2)
-                        
-                    box_offset = (box_center - 208) # UNCLEAR 208 + ?
-                    box_pix_m = (box_dist * self.BOX_DIST_FACTOR)/416
-                    box_xpos = round(box_pix_m * box_offset,2)
-                    temp_boxes.extend((box_dist, box_xpos))
+
+                    #box_offset = (box_center - 208) # UNCLEAR 208 + ?
+                    #box_pix_m = (box_dist * self.BOX_DIST_FACTOR)/416
+                    #box_xpos = round(box_pix_m * box_offset,2)
+                    temp_boxes.extend((box_center, box_dist))
 
                 else:
-                    box_dist = self.getBoxDistance(boxW)/100 # in meter
+                    box_dist = self.getBoxDistance(boxW) # in cm
                     #print("test distance: ", box_dist)
 
                     ### Distance from IR and Kalman could be applied here ###
 
                     box_center = x_min + (boxW/2)
                     #print("test center: ", box_center)
-                    box_offset = (box_center - 208) # UNCLEAR 208 + ?
+                    #box_offset = (box_center - 208) # UNCLEAR 208 + ?
                     #print("test offset: ", box_offset)
-                    box_pix_m = (box_dist * self.BOX_DIST_FACTOR)/416
+                    #box_pix_m = (box_dist * self.BOX_DIST_FACTOR)/416
                     #print("test pix_m: ", box_pix_m)
-                    box_xpos = round(box_pix_m * box_offset,2)
+                    #box_xpos = round(box_pix_m * box_offset,2)
                     #print("test xpos: ", box_xpos)
-                    temp_boxes.extend((box_dist, box_xpos))
+                    temp_boxes.extend((box_center, box_dist))
+
 
         #print("test num boxes: ", num_boxes)
         temp_lines.insert(0, num_lines) # Add number of, in first position
@@ -143,13 +144,18 @@ def main():
         ret,img=cam.read()
         detected, scores, classes = yolo.detect_image(img)
         obs.updateCoordinates(detected, scores, classes)
+        right_centers, left_centers = getCenterToLines(obs.lines, 0)
+        print("right centers: ", right_centers)
+        print("left centers: ", left_centers)
+        print("obstacles: ", obs.boxes)
 
         # cv2 rectangle could be used here to show detected graphically
         cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
         cv2.imshow("Frame", img)
 
-        print("Lines: ", obs.lines)
-        print("Box: ", obs.boxes)
+
+        #print("Lines: ", obs.lines)
+        #print("Box: ", obs.boxes)
 
         '''
         print("Nr of Boxes: ", obs.boxes[0])
@@ -167,6 +173,79 @@ def main():
             break
     cam.release()
     cv2.destroyAllWindows()
+
+def getCenterToLines(d_lines, prev_angle):
+    retur = 3
+    right_L = []
+    right_L = np.array(right_L)
+    left_L = []
+    left_L = np.array(left_L)
+    j = 1
+    add_l=0
+    add_r=0
+    for i in range(0, d_lines[0]):
+
+        temp_line, retur = extract_lines(j,d_lines)
+        j = j+4
+        if retur == 0:
+            if add_r != 0:
+                right_L = np.concatenate((right_L,temp_line), axis = 0)
+            else:
+                right_L = temp_line
+            add_r+= 1
+        elif retur == 1:
+            if add_l !=0:
+                left_L = np.concatenate((left_L,temp_line), axis = 0) # CHANGE CONCATENATE, i!=0 galler ej
+            else:
+                left_L = temp_line
+            add_l+= 1
+        elif retur == 2:
+            if prev_angle < 370:
+                temp_line[add_l]=[100, 200]
+                if add_l !=0:
+                    left_L = np.concatenate((left_L,temp_line), axis = 0) 
+                else:
+                    left_L = temp_line
+            else:
+                temp_line[add_r] = [300, 200]
+                if add_r != 0:
+                    right_L = np.concatenate((right_L,temp_line), axis = 0)
+                else:
+                    right_L = temp_line
+                add_r+= 1
+    return right_L, left_L
+
+def extract_lines(j,boxes):
+
+    retur=2
+    # Extract corners of detected lines and obstacles
+    ymin=boxes[j]
+    ymax=boxes[j+1]
+
+    xmin=boxes[j+2]
+    xmax=boxes[j+3]
+
+    # Calculate middle
+    y = (ymax + ymin)/2
+
+    # Calculate middle
+    x = (xmax + xmin)/2
+    
+    # Check if line can be determined with confidence 
+    if x>228:
+        retur=0 # right
+    elif x<188:
+        retur=1 # left
+
+    X1,Y1 = np.meshgrid(x,y)
+    ob = np.array([X1.flatten(), Y1.flatten()]).T
+        
+    return ob, retur
+
+def getSteering(r_cent, l_cent, obs_data):
+
+    if(obs_data[0] > 0):
+        
 
 if __name__ == "__main__":
     main()

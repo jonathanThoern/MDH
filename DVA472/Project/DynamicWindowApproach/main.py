@@ -18,7 +18,7 @@ def main():
         #yolo..() collect obstacles in class variables
         obs.lines = [2,1,2,2,20,1,4,320,410]
         #obs.lines = [1,1,10,280,320] right line
-        obs.boxes = [1, 0,-4] #[1,15.01,16.39,0.05,0.60,14],[1, -1,2] check if zero from yolo
+        obs.boxes = [1, 0.5,2] #[1,15.01,16.39,0.05,0.60,14],[1, -1,2] check if zero from yolo
         y = [192,205,248]
         y = np.sort(y)
         dist = [1,2,3]

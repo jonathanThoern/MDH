@@ -24,11 +24,11 @@ class Config():
 
     def __init__(self):
         # robot parameter
-        self.max_speed = 20.0  # [m/s] 0.02
+        self.max_speed = 1  # [m/s] 0.02
         self.min_speed = 0   # [m/s]
-        self.max_yawrate = 40.0 * math.pi / 180.0  # [rad/s] -good value
-        self.max_accel = 2.0  # [m/ss]
-        self.max_dyawrate = 1500.0 * math.pi / 180.0  # [rad/ss]
+        self.max_yawrate = 20.0 * math.pi / 180.0  # [rad/s] -good value
+        self.max_accel = 1  # [m/ss]
+        self.max_dyawrate = 150.0 * math.pi / 180.0  # [rad/ss]
         self.v_reso = 0.01  # [m/s]
         self.yawrate_reso = 0.1 * math.pi / 180.0  # [rad/s] 
         self.dt = 0.1  # [s]
