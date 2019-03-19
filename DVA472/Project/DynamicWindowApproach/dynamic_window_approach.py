@@ -24,18 +24,18 @@ class Config():
 
     def __init__(self):
         # robot parameter
-        self.max_speed = 0.5  # [m/s] 0.02
+        self.max_speed = 20.0  # [m/s] 0.02
         self.min_speed = 0   # [m/s]
-        self.max_yawrate = 10.0 * math.pi / 180.0  # [rad/s] -good value
-        self.max_accel = 0.2  # [m/ss]
-        self.max_dyawrate = 150.0 * math.pi / 180.0  # [rad/ss]
+        self.max_yawrate = 40.0 * math.pi / 180.0  # [rad/s] -good value
+        self.max_accel = 2.0  # [m/ss]
+        self.max_dyawrate = 1500.0 * math.pi / 180.0  # [rad/ss]
         self.v_reso = 0.01  # [m/s]
         self.yawrate_reso = 0.1 * math.pi / 180.0  # [rad/s] 
         self.dt = 0.1  # [s]
         self.predict_time = 3.0  # [s]
         self.to_goal_cost_gain = 1.0
         self.speed_cost_gain = 1.0
-        self.robot_radius = 0.4  # car radius(?) + obstacle radius(0.10) [m] = 0.3
+        self.robot_radius = 0.3  # car radius(?) + obstacle radius(0.10) [m] = 0.3
         self.x_comp=1
         self.y_invert=416
         self.y=1
@@ -52,11 +52,11 @@ def extract_lines(j,boxes,config):
     # Extract corners of detected lines and obstacles
     ymin=config.y_invert-boxes[j]
     ymax=config.y_invert-boxes[j+1]
-    #xmin=boxes[j+2]-config.x_comp
-    #xmax=boxes[j+3]-config.x_comp
+    xmin_comp=boxes[j+2]-208
+    xmax_comp=boxes[j+3]-208
 
-    xmin=boxes[j+2]-config.x_comp
-    xmax=boxes[j+3]-config.x_comp
+    xmin=boxes[j+2]
+    xmax=boxes[j+3]
 
     y = [192,205,248]
     y = np.sort(y)
@@ -67,27 +67,25 @@ def extract_lines(j,boxes,config):
     # Calculate middle
     y = (ymax + ymin)/2
 
-    pixel_xmin = y * 0.75
-    pixel_v_min = pixel_xmin/416
-    xmin = xmin*pixel_v_min
-    xmin = xmin - (y*0.75)
-
-    pixel_xmax = y * 0.75
-    pixel_v_max =pixel_xmax/416
-    xmax = xmax*pixel_v_max
-    xmax = xmax - (y*0.75)
-
-
     # Calculate middle
     x = (xmax + xmin)/2
-    print("Calculated x",x)
     
 
     # Check if line can be determined with confidence 
-    if x>0.25:
+    if x>228:
         retur=0 # right
-    elif x<-0.25:
+    elif x<188:
         retur=1 # left
+
+    x = (xmax_comp + xmin_comp)/2
+
+    pixelW = y * 0.75
+    PixelPm= pixelW / 416
+    x = PixelPm * x
+
+        
+
+        
 
     X1,Y1 = np.meshgrid(x,y)
     ob = np.array([X1.flatten(), Y1.flatten()]).T
@@ -277,18 +275,18 @@ def main(gx, gy, d_lines, boxes,prev_angle): #gx=0.0, gy=5.0
             add_l+= 1
         elif retur == 2:
             if prev_angle < 0:
+                temp_line[add_l][0] = -0.45
                 if add_l !=0:
                     left_L = np.concatenate((left_L,temp_line), axis = 0) 
                 else:
                     left_L = temp_line
             else:
+                temp_line[add_r][0] = 0.45
                 if add_r != 0:
                     right_L = np.concatenate((right_L,temp_line), axis = 0)
                 else:
                     right_L = temp_line
                 add_r+= 1
-
-    
         
     for i in range(1000):# change to a lower loop-value
         u, ltraj = dwa_control(x, u, config, goal, ob)
@@ -307,14 +305,15 @@ def main(gx, gy, d_lines, boxes,prev_angle): #gx=0.0, gy=5.0
             plt.plot(ltraj[:, 0], ltraj[:, 1], "-g")
             plt.plot(x[0], x[1], "xr")
             plt.plot(goal[0], goal[1], "xb")
-            
-            plt.plot(right_L_sum[0][0], right_L_sum[0][1], "or")
-            
-            plt.plot(left_L_sum[0][0], left_L_sum[0][1], "om")
+            if len(right_L) != 0:
+                plt.plot(right_L[0][0], right_L[0][1], "or")
+            if len(left_L) != 0:
+                plt.plot(left_L[0][0], left_L[0][1], "om")
+            #plt.plot(-0.75, 3, "om")
             plt.plot(ref[0], ref[1], "og")
             plt.plot(ob[:, 0], ob[:, 1], "ob")
             plot_arrow(x[0], x[1], x[2])
-            plt.axis([-3.75,3.75,0,5])
+            plt.axis([-3.75,3.75,-4,5])
             plt.grid(True)
             plt.pause(0.0001)
 
@@ -329,56 +328,52 @@ def main(gx, gy, d_lines, boxes,prev_angle): #gx=0.0, gy=5.0
         
         if len(right_L)!= 0 and add_r!=0:
             for i in range(0,add_r):
-                mag_r_temp= math.sqrt((right_L[i][0] - ref[0])**2 + (right_L[i][1] - ref[1])**2)
+                mag_r_temp= math.sqrt((right_L[i][0] - ref[0])**2 + (right_L[i][1]*(0.9/5) - ref[1]*(0.9/5))**2)
                 mag_right = mag_right + mag_r_temp
                 right_L_sum[0][0] = right_L[i][0] + right_L_sum[0][0]
                 right_L_sum[0][1] = right_L[i][1] + right_L_sum[0][1]
-            mag_right = mag_right/len(right_L)
-            right_L_sum = right_L_sum/len(right_L)
+            #mag_right = mag_right/len(right_L)
+            #right_L_sum = right_L_sum/len(right_L)
+            mag_right = mag_right/add_r
+            right_L_sum = right_L_sum/add_r
+            
         else:
-            temp_r_l = [[0.75, 5]]
+            temp_r_l = [[1, 5]]
             temp_r_l = np.array(temp_r_l)
             right_L = temp_r_l
-            mag_right = math.sqrt((right_L[0][0] - ref[0])**2 + (right_L[0][1] - ref[1])**2)
+            mag_right = math.sqrt((right_L[0][0] - ref[0])**2 + (right_L[0][1]*(0.9/5) - ref[1]*(0.9/5))**2)
             right_L_sum = right_L
             
         mag_left = 0
         mag_l_temp = 0
         
         #Magnitude left line
-        print("addL", add_l)
-        print("addr", add_r)
         if len(left_L) != 0 and add_l!=0:
             for i in range(0,add_l):
-                mag_l_temp= math.sqrt((left_L[i][0] - ref[0])**2 + (left_L[i][1] - ref[1])**2)
+                mag_l_temp= math.sqrt((left_L[i][0] - ref[0])**2 + (left_L[i][1]*(0.9/5) - ref[1]*(0.9/5))**2)
                 mag_left = mag_left + mag_l_temp
                 left_L_sum[0][0] = left_L[i][0] + left_L_sum[0][0]
                 left_L_sum[0][1] = left_L[i][1] + left_L_sum[0][1]
             mag_left=mag_left/len(left_L)
             left_L_sum = left_L_sum/len(left_L)
         else:
-            temp_l_l = [[-0.75, 5]]
+            temp_l_l = [[-1, 5]]
             temp_l_l = np.array(temp_l_l)
             left_L = temp_l_l
-            mag_left = math.sqrt((left_L[0][0] - ref[0])**2 + (left_L[0][1] - ref[1])**2)
-            left_L_sum = left_L
+            mag_left = math.sqrt((temp_l_l[0][0] - ref[0])**2 + (temp_l_l[0][1]*(0.9/5) - ref[1]*(0.9/5))**2)
+            #mag_left = math.sqrt((left_L[0][0] - ref[0])**2 + (left_L[0][1] - ref[1])**2)
+            #left_L_sum = left_L
+            left_L_sum = temp_l_l
 
-        print("left sum:",left_L_sum)
-        print("right sum:", right_L_sum)
-        print("left mag:",mag_left)
-        print("right mag:", mag_right)
         #Calculate goal based on magnitude
         mag_tot=0
         mag_tot = (mag_right + mag_left) /2
         x_cord_r=0
         x_cord_l=0
-        x_cord_r = right_L_sum[0][0] - math.sqrt(mag_tot**2 - (right_L_sum[0][1]- (ref[1]+config.y))**2)
-        x_cord_l = left_L_sum[0][0] - math.sqrt(mag_tot**2 - (left_L_sum[0][1]- (ref[1]+config.y))**2)
-        print("x-cord r:",x_cord_r)
-        print("x-cord l:",x_cord_l)
-        goal[0] = (x_cord_r + x_cord_l)/2
-        goal[1] = ref[1] + config.y
-        print("goal", goal)
+        x_cord_r = right_L_sum[0][0] + math.sqrt(mag_tot**2 - (right_L_sum[0][1]*(0.9/5) - (ref[1]+config.y)*(0.9/5))**2)
+        x_cord_l = left_L_sum[0][0] - math.sqrt(mag_tot**2 - (left_L_sum[0][1]*(0.9/5)- (ref[1]+config.y)*(0.9/5))**2)
+        goal[0] = (x_cord_r  + x_cord_l)/2
+        goal[1] = ref[1] + config.y 
 
         # Previous implementation of reallocation - do we still need it?
         """
