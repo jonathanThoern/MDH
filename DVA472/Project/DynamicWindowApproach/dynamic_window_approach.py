@@ -45,6 +45,7 @@ def extract_obs(j,boxes,config):
     X1,Y1 = np.meshgrid(x,y)
     ob = np.array([X1.flatten(), Y1.flatten()]).T
     return ob
+    
 #ymin, ymax, xmin, xmax
 def extract_lines(j,boxes,config):
 
